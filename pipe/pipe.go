@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/lee20h/IPC"
 	"io"
 	"os"
 	"os/exec"
@@ -11,12 +12,12 @@ import (
 
 func main() {
 	if len(os.Args) != 2 {
-		invalidArg("Usage: ./pipe '<command1> | <command2>'")
+		util.InvalidArg("Usage: ./pipe '<command1> | <command2>'")
 	}
 
 	commands := strings.Split(os.Args[1], "|")
 	if len(commands) < 2 {
-		invalidArg("You need to provide two commands separated by '|'")
+		util.InvalidArg("You need to provide two commands separated by '|'")
 	}
 
 	command1 := strings.Fields(commands[0])
@@ -27,12 +28,12 @@ func main() {
 
 	cmd1Out, err := cmd1.StdoutPipe()
 	if err != nil {
-		executionError("Error creating stdout pipe for first program", err)
+		util.ExecutionError("Error creating stdout pipe for first program", err)
 	}
 
 	cmd2In, err := cmd2.StdinPipe()
 	if err != nil {
-		executionError("Error creating stdout pipe for second program", err)
+		util.ExecutionError("Error creating stdout pipe for second program", err)
 	}
 
 	cmd2.Stdout = os.Stdout
@@ -43,26 +44,16 @@ func main() {
 	}()
 
 	if err := cmd1.Start(); err != nil {
-		executionError("Error starting first program", err)
+		util.ExecutionError("Error starting first program", err)
 	}
 	if err := cmd2.Start(); err != nil {
-		executionError("Error starting second program", err)
+		util.ExecutionError("Error starting second program", err)
 	}
 
 	cmd1.Wait()
 	if err := cmd2.Wait(); err != nil {
-		executionError("Error running second program", err)
+		util.ExecutionError("Error running second program", err)
 	}
-}
-
-func invalidArg(message string) {
-	fmt.Fprintln(os.Stdout, message)
-	os.Exit(1)
-}
-
-func executionError(message string, err error) {
-	fmt.Fprintln(os.Stderr, message, err)
-	os.Exit(1)
 }
 
 func bufferMethod(command1, command2 []string) {
@@ -70,7 +61,7 @@ func bufferMethod(command1, command2 []string) {
 	var outputBuf bytes.Buffer
 	cmd1.Stdout = &outputBuf
 	if err := cmd1.Run(); err != nil {
-		executionError("Error running first program", err)
+		util.ExecutionError("Error running first program", err)
 	}
 
 	cmd2 := exec.Command(command2[0], command2[1:]...)
@@ -79,7 +70,7 @@ func bufferMethod(command1, command2 []string) {
 	cmd2.Stdout = os.Stdout
 
 	if err := cmd2.Run(); err != nil {
-		executionError("Error running second program", err)
+		util.ExecutionError("Error running second program", err)
 	}
 }
 
@@ -94,11 +85,11 @@ func pipeMethod(command1, command2 []string) {
 	cmd2.Stdout = os.Stdout
 
 	if err := cmd1.Start(); err != nil {
-		executionError("Error starting first program", err)
+		util.ExecutionError("Error starting first program", err)
 	}
 
 	if err := cmd2.Start(); err != nil {
-		executionError("Error starting second program", err)
+		util.ExecutionError("Error starting second program", err)
 	}
 
 	go func() {
