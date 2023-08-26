@@ -1,3 +1,3 @@
-module github.com/lee20h/linux_pipe
+module github.com/lee20h/IPC
 
 go 1.20
